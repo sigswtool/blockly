@@ -27,9 +27,9 @@
 goog.provide('Blockly.FieldImage');
 
 goog.require('Blockly.Field');
-goog.require('goog.dom');
+goog.require('Blockly.utils');
+
 goog.require('goog.math.Size');
-goog.require('goog.userAgent');
 
 
 /**
@@ -52,6 +52,7 @@ Blockly.FieldImage = function(src, width, height, opt_alt, opt_onClick) {
   this.size_ = new goog.math.Size(this.width_,
       this.height_ + 2 * Blockly.BlockSvg.INLINE_PADDING_Y);
   this.text_ = opt_alt || '';
+  this.tooltip_ = '';
   this.setValue(src);
 
   if (typeof opt_onClick == 'function') {
@@ -67,6 +68,7 @@ goog.inherits(Blockly.FieldImage, Blockly.Field);
  *                          alt).
  * @returns {!Blockly.FieldImage} The new field instance.
  * @package
+ * @nocollapse
  */
 Blockly.FieldImage.fromJson = function(options) {
   var src = Blockly.utils.replaceMessageReferences(options['src']);
@@ -107,8 +109,12 @@ Blockly.FieldImage.prototype.init = function() {
   this.setValue(this.src_);
   this.sourceBlock_.getSvgRoot().appendChild(this.fieldGroup_);
 
-  // Configure the field to be transparent with respect to tooltips.
-  this.setTooltip(this.sourceBlock_);
+  if (this.tooltip_) {
+    this.imageElement_.tooltip = this.tooltip_;
+  } else {
+    // Configure the field to be transparent with respect to tooltips.
+    this.setTooltip(this.sourceBlock_);
+  }
   Blockly.Tooltip.bindMouseEvents(this.imageElement_);
 
   this.maybeAddClickHandler_();
@@ -118,8 +124,10 @@ Blockly.FieldImage.prototype.init = function() {
  * Dispose of all DOM objects belonging to this text.
  */
 Blockly.FieldImage.prototype.dispose = function() {
-  goog.dom.removeNode(this.fieldGroup_);
-  this.fieldGroup_ = null;
+  if (this.fieldGroup_) {
+    Blockly.utils.removeNode(this.fieldGroup_);
+    this.fieldGroup_ = null;
+  }
   this.imageElement_ = null;
 };
 
@@ -132,7 +140,7 @@ Blockly.FieldImage.prototype.maybeAddClickHandler_ = function() {
   if (this.clickHandler_) {
     this.mouseDownWrapper_ =
         Blockly.bindEventWithChecks_(
-            this.fieldGroup_, 'mousedown', this, this.onMouseDown_);
+            this.fieldGroup_, 'mousedown', this, this.clickHandler_);
   }
 };
 
@@ -142,7 +150,10 @@ Blockly.FieldImage.prototype.maybeAddClickHandler_ = function() {
  *     link to for its tooltip.
  */
 Blockly.FieldImage.prototype.setTooltip = function(newTip) {
-  this.imageElement_.tooltip = newTip;
+  this.tooltip_ = newTip;
+  if (this.imageElement_) {
+    this.imageElement_.tooltip = newTip;
+  }
 };
 
 /**
@@ -216,3 +227,5 @@ Blockly.FieldImage.prototype.showEditor_ = function() {
     this.clickHandler_(this);
   }
 };
+
+Blockly.Field.register('field_image', Blockly.FieldImage);

@@ -70,6 +70,7 @@
 <script src="../../blocks/colour.js"></script>
 <script src="../../blocks/variables.js"></script>
 <script src="../../blocks/procedures.js"></script>
+
 <script>
 'use strict';
 
@@ -89,14 +90,51 @@ function start() {
   changeIndex();
 }
 
-function loadXml() {
-  var dropdown = document.getElementById('testUrl');
-  var url = dropdown.options[dropdown.selectedIndex].value;
-  if (!url) {
-    url = window.prompt('Enter URL of test file.');
-    if (!url) {
-      return;
+/*
+ * Run this test to load all of the tests in the selected suites.  The contents
+ * will be loaded into the workspace in order.  To test the generators:
+ * - select your language from the buttons above the text area
+ * - copy all of the generated code
+ * - run it in an interpreter of your choice
+ * - scan all of the results for "FAIL".  All test suites are running in order,
+ *      and each will report OK or FAIL based only on the tests in that suite.
+ * If some tests are failing, load test suites individually to continue
+ * debugging.
+ */
+function loadSelected() {
+  var output = document.getElementById('importExport');
+  output.style.background = 'gray';
+
+  var loadingElem = document.getElementById('loading');
+  loadingElem.textContent = 'loading...';
+
+  // Clear before adding all of the blocks.
+  demoWorkspace.clear();
+
+  var boxList = document.getElementById('checkboxes');
+  var inputChildren = boxList.getElementsByTagName('input');
+  for (var i = 0; i < inputChildren.length; i++) {
+    if (inputChildren[i].checked) {
+      var testUrl = inputChildren[i].value;
+      if (testUrl) {
+        var xmlText = fetchFile(testUrl);
+        if (xmlText !== null) {
+          fromXml(testUrl, xmlText, /* opt_append */ true);
+        }
+      }
     }
+  }
+  output.style.background = '';
+  loadingElem.textContent = 'done';
+}
+
+/**
+ * Ask the user for a file name, then load that file's contents.
+ */
+function loadOther() {
+  var url = window.prompt('Enter URL of test file.');
+  if (!url) {
+    return;
   }
   var xmlText = fetchFile(url);
   if (xmlText !== null) {
@@ -127,16 +165,24 @@ function fetchFile(xmlUrl) {
 /**
  * @param {string} filename The URL (or other name) of the XML, for reporting.
  * @param {string} xmlText The actual XML text.
+ * @param {boolean=} opt_append True if the XML should be appended to the
+ *     workspace.  Otherwise the workspace is cleared and the new XML is loaded.
  */
-function fromXml(filename, xmlText) {
+function fromXml(filename, xmlText, opt_append) {
   var output = document.getElementById('importExport');
   output.value = xmlText;
   output.scrollTop = 0;
   output.scrollLeft = 0;
-  demoWorkspace.clear();
+  if (!opt_append) {
+    demoWorkspace.clear();
+  }
   try {
     var xmlDoc = Blockly.Xml.textToDom(xmlText);
-    Blockly.Xml.domToWorkspace(xmlDoc, demoWorkspace);
+    if (opt_append) {
+      Blockly.Xml.appendDomToWorkspace(xmlDoc, demoWorkspace);
+    } else {
+      Blockly.Xml.domToWorkspace(xmlDoc, demoWorkspace);
+    }
   } catch (e) {
     var msg = 'Error parsing XML: ' + filename + '\n\n\t' + e;
     if (e.stack) {
@@ -145,6 +191,22 @@ function fromXml(filename, xmlText) {
     console.error(e.stack ? e : msg);
     alert(msg);
     return;
+  }
+}
+
+function checkAll() {
+  var boxList = document.getElementById('checkboxes');
+  var inputChildren = boxList.getElementsByTagName('input');
+  for (var i = 0; i < inputChildren.length; i++) {
+    inputChildren[i].checked = true;
+  }
+}
+
+function uncheckAll() {
+  var boxList = document.getElementById('checkboxes');
+  var inputChildren = boxList.getElementsByTagName('input');
+  for (var i = 0; i < inputChildren.length; i++) {
+    inputChildren[i].checked = false;
   }
 }
 
@@ -220,6 +282,9 @@ h1 {
   height: 100%;
   width: 100%;
 }
+#loading {
+  color: red;
+}
 </style>
 </head>
 <body onload="start()">
@@ -276,6 +341,7 @@ h1 {
       <block type="math_constrain"></block>
       <block type="math_random_int"></block>
       <block type="math_random_float"></block>
+      <block type="math_atan2"></block>
     </category>
     <category name="Text" colour="160">
       <block type="text"></block>
@@ -324,21 +390,28 @@ h1 {
 
     <p><a href="https://developers.google.com/blockly/guides/modify/web/unit-testing">See the docs</a> for details on running the tests.
 
+
+    <div id="checkboxes">
+      <input type="button" value="Check all" onclick="checkAll()">
+      <input type="button" value="Uncheck all" onclick="uncheckAll()"><br/>
+      <input type="checkbox" value="logic.xml">Logic</input><br/>
+      <input type="checkbox" value="loops1.xml">Loops 1 (repeat, while, foreach)</input><br/>
+      <input type="checkbox" value="loops2.xml">Loops 2 (count)</input><br/>
+      <input type="checkbox" value="loops3.xml">Loops 3 (continue, break)</input><br/>
+      <input type="checkbox" value="math.xml">Math</input><br/>
+      <input type="checkbox" value="text.xml">Text</input><br/>
+      <input type="checkbox" value="lists.xml">Lists</input><br/>
+      <input type="checkbox" value="colour.xml">Colour</input><br/>
+      <input type="checkbox" value="variables.xml">Variables</input><br/>
+      <input type="checkbox" value="functions.xml">Functions</input><br/>
+    </div>
+
     <p>
-      <select id="testUrl">
-        <option value="logic.xml">Logic</option>
-        <option value="loops1.xml">Loops 1 (repeat, while, foreach)</option>
-        <option value="loops2.xml">Loops 2 (count)</option>
-        <option value="loops3.xml">Loops 3 (continue, break)</option>
-        <option value="math.xml">Math</option>
-        <option value="text.xml">Text</option>
-        <option value="lists.xml">Lists</option>
-        <option value="colour.xml">Colour</option>
-        <option value="variables.xml">Variables</option>
-        <option value="functions.xml">Functions</option>
-        <option value="">Other...</option>
-      </select>
-      <input type="button" value="Load" onclick="loadXml()">
+      <input type="button" value="Load selected" id="loadSelectedBtn" onclick="loadSelected()">
+      <label for="loadSelectedBtn" id="loading"></label>
+    </p>
+    <p>
+      <input type="button" value="Load by file name" onclick="loadOther()">
     </p>
 
     <p>

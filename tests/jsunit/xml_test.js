@@ -180,7 +180,7 @@ function test_domToWorkspace_VariablesAtTop() {
 }
 
 function test_domToWorkspace_VariablesAtTop_DuplicateVariablesTag() {
-  // Expect thrown Error because of duplicate 'variables' tag
+  // Expect thrown Error because of duplicate 'variables' tag.
   xmlTest_setUpWithMockBlocks();
   try {
     var dom = Blockly.Xml.textToDom(
@@ -392,7 +392,7 @@ function test_variableFieldXml_caseSensitive() {
   };
 
   var generatedXml =
-    Blockly.Variables.generateVariableFieldXml_(mockVariableModel);
+    Blockly.Variables.generateVariableFieldXmlString(mockVariableModel);
   var goldenXml =
       '<field name="VAR"' +
       ' id="' + id + '"' +
