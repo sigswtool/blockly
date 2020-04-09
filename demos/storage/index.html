@@ -49,7 +49,7 @@
 
   <div id="blocklyDiv" style="height: 480px; width: 600px;"></div>
 
-  <xml id="toolbox" style="display: none">
+  <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
     <category name="Logic" colour="%{BKY_LOGIC_HUE}">
       <block type="controls_if"></block>
       <block type="logic_compare"></block>
@@ -86,7 +86,7 @@
         {media: '../../media/',
          toolbox: document.getElementById('toolbox')});
 
-    // An href with #key trigers an AJAX call to retrieve saved blocks.
+    // An href with #key triggers an AJAX call to retrieve saved blocks.
     if ('BlocklyStorage' in window && window.location.hash.length > 1) {
       BlocklyStorage.retrieveXml(window.location.hash.substring(1));
     }

@@ -1,21 +1,7 @@
 /**
  * @license
- * Blockly Tests
- *
- * Copyright 2017 Google Inc.
- * https://developers.google.com/blockly/
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
  */
 
  /**
@@ -24,9 +10,6 @@
  */
 'use strict';
 
-goog.require('goog.testing');
-goog.require('goog.testing.MockControl');
-
 var variable_map;
 var mockControl_;
 var workspace;
@@ -34,12 +17,13 @@ var workspace;
 function variableMapTest_setUp() {
   workspace = new Blockly.Workspace();
   variable_map = new Blockly.VariableMap(workspace);
-  mockControl_ = new goog.testing.MockControl();
 }
 
 function variableMapTest_tearDown() {
   workspace.dispose();
-  mockControl_.$tearDown();
+  if (mockControl_) {
+    mockControl_.restore();
+  }
   variable_map = null;
 }
 
@@ -153,7 +137,7 @@ function test_createVariableNullAndUndefinedType() {
 
 function test_createVariableNullId() {
   variableMapTest_setUp();
-  setUpMockMethod(mockControl_, Blockly.utils, 'genUid', null, ['1', '2']);
+  mockControl_ = setUpMockMethod(Blockly.utils, 'genUid', null, ['1', '2']);
   try {
     variable_map.createVariable('name1', 'type1', null);
     checkVariableValues(variable_map, 'name1', 'type1', '1');
@@ -164,7 +148,7 @@ function test_createVariableNullId() {
 
 function test_createVariableUndefinedId() {
   variableMapTest_setUp();
-  setUpMockMethod(mockControl_, Blockly.utils, 'genUid', null, ['1', '2']);
+  mockControl_ = setUpMockMethod(Blockly.utils, 'genUid', null, ['1', '2']);
   try {
     variable_map.createVariable('name1', 'type1', undefined);
     checkVariableValues(variable_map, 'name1', 'type1', '1');

@@ -1,30 +1,18 @@
 /**
  * @license
- * Visual Blocks Editor
- *
- * Copyright 2018 Google Inc.
- * https://developers.google.com/blockly/
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright 2018 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
  */
 
  /**
  * @fileoverview Tests for Blockly.Block
  * @author fenichel@google.com (Rachel Fenichel)
  */
+
 'use strict';
 
 var workspace;
+var mockControl_;
 
 function defineTestBlocks() {
   Blockly.defineBlocksWithJsonArray([{
@@ -59,6 +47,9 @@ function blockTest_setUp() {
 function blockTest_tearDown() {
   undefineTestBlocks();
   workspace.dispose();
+  if (mockControl_) {
+    mockControl_.restore();
+  }
 }
 
 function assertUnpluggedNoheal(blocks) {
@@ -80,6 +71,17 @@ function assertUnpluggedHealed(blocks) {
   assertNull(blocks.B.getParent());
 }
 
+function assertUnpluggedHealFailed(blocks) {
+  // A has nothing connected to it.
+  assertEquals(0, blocks.A.getChildren().length);
+  // B has nothing connected to it.
+  assertEquals(0, blocks.B.getChildren().length);
+  // B is the top of its stack.
+  assertNull(blocks.B.getParent());
+  // C is the top of its stack.
+  assertNull(blocks.C.getParent());
+}
+
 function setUpRowBlocks() {
   var blockA = workspace.newBlock('row_block');
   var blockB = workspace.newBlock('row_block');
@@ -94,7 +96,7 @@ function setUpRowBlocks() {
     A: blockA,
     B: blockB,
     C: blockC
-  }
+  };
 }
 
 function setUpStackBlocks() {
@@ -111,7 +113,7 @@ function setUpStackBlocks() {
     A: blockA,
     B: blockB,
     C: blockC
-  }
+  };
 }
 
 
@@ -149,20 +151,7 @@ function test_block_stack_unplug_heal_bad_checks() {
     // The types don't work.
     blocks.B.unplug(true);
 
-    // Stack blocks unplug before checking whether the types match.
-    // TODO (#1994): Check types before unplugging.
-    // A has nothing connected to it.
-    assertEquals(0, blocks.A.getChildren().length);
-    // B has nothing connected to it.
-    assertEquals(0, blocks.B.getChildren().length);
-    // C has nothing connected to it.
-    assertEquals(0, blocks.C.getChildren().length);
-    // A is the top of its stack.
-    assertNull(blocks.A.getParent());
-    // B is the top of its stack.
-    assertNull(blocks.B.getParent());
-    // C is the top of its stack.
-    assertNull(blocks.C.getParent());
+    assertUnpluggedHealFailed(blocks);
   } finally {
     blockTest_tearDown();
   }
@@ -202,7 +191,7 @@ function test_block_row_unplug_heal_bad_checks() {
 
     // Each block has only one input, but the types don't work.
     blocks.B.unplug(true);
-    assertUnpluggedNoheal(blocks);
+    assertUnpluggedHealFailed(blocks);
   } finally {
     blockTest_tearDown();
   }
@@ -213,7 +202,7 @@ function test_block_row_unplug_multi_inputs_parent() {
   try {
     var blocks = setUpRowBlocks();
     // Add extra input to parent
-    blocks.A.appendValueInput("INPUT").setCheck(null);
+    blocks.A.appendValueInput('INPUT').setCheck(null);
 
     // Parent block has multiple inputs.
     blocks.B.unplug(true);
@@ -228,11 +217,11 @@ function test_block_row_unplug_multi_inputs_middle() {
   try {
     var blocks = setUpRowBlocks();
     // Add extra input to middle block
-    blocks.B.appendValueInput("INPUT").setCheck(null);
+    blocks.B.appendValueInput('INPUT').setCheck(null);
 
     // Middle block has multiple inputs.
     blocks.B.unplug(true);
-    assertUnpluggedNoheal(blocks);
+    assertUnpluggedHealed(blocks);
   } finally {
     blockTest_tearDown();
   }
@@ -243,7 +232,7 @@ function test_block_row_unplug_multi_inputs_child() {
   try {
     var blocks = setUpRowBlocks();
     // Add extra input to child block
-    blocks.C.appendValueInput("INPUT").setCheck(null);
+    blocks.C.appendValueInput('INPUT').setCheck(null);
 
     // Child block input count doesn't matter.
     blocks.B.unplug(true);

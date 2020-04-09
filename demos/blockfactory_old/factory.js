@@ -1,20 +1,7 @@
 /**
- * Blockly Demos: Block Factory
- *
- * Copyright 2012 Google Inc.
- * https://developers.google.com/blockly/
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2012 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 /**
@@ -94,7 +81,7 @@ function updateLanguage() {
  * Update the language code as JSON.
  * @param {string} blockType Name of block.
  * @param {!Blockly.Block} rootBlock Factory_base block.
- * @return {string} Generanted language code.
+ * @return {string} Generated language code.
  * @private
  */
 function formatJson_(blockType, rootBlock) {
@@ -196,7 +183,7 @@ function formatJson_(blockType, rootBlock) {
  * Update the language code as JavaScript.
  * @param {string} blockType Name of block.
  * @param {!Blockly.Block} rootBlock Factory_base block.
- * @return {string} Generanted language code.
+ * @return {string} Generated language code.
  * @private
  */
 function formatJavaScript_(blockType, rootBlock) {
@@ -416,17 +403,17 @@ function getFieldsJson_(block) {
           var obj = {
             type: block.type,
             name: block.getFieldValue('FIELDNAME'),
-            value: parseFloat(block.getFieldValue('VALUE'))
+            value: Number(block.getFieldValue('VALUE'))
           };
-          var min = parseFloat(block.getFieldValue('MIN'));
+          var min = Number(block.getFieldValue('MIN'));
           if (min > -Infinity) {
             obj.min = min;
           }
-          var max = parseFloat(block.getFieldValue('MAX'));
+          var max = Number(block.getFieldValue('MAX'));
           if (max < Infinity) {
             obj.max = max;
           }
-          var precision = parseFloat(block.getFieldValue('PRECISION'));
+          var precision = Number(block.getFieldValue('PRECISION'));
           if (precision) {
             obj.precision = precision;
           }
@@ -500,7 +487,7 @@ function getFieldsJson_(block) {
 /**
  * Escape a string.
  * @param {string} string String to escape.
- * @return {string} Escaped string surrouned by quotes.
+ * @return {string} Escaped string surrounded by quotes.
  */
 function escapeString(string) {
   return JSON.stringify(string);
@@ -748,9 +735,9 @@ function updatePreview() {
 function injectCode(code, id) {
   var pre = document.getElementById(id);
   pre.textContent = code;
-  code = pre.textContent;
-  code = PR.prettyPrintOne(code, 'js');
-  pre.innerHTML = code;
+  // Remove the 'prettyprinted' class, so that Prettify will recalculate.
+  pre.className = pre.className.replace('prettyprinted', '');
+  PR.prettyPrint();
 }
 
 /**
@@ -829,7 +816,7 @@ function init() {
     BlocklyStorage.retrieveXml(window.location.hash.substring(1),
                                mainWorkspace);
   } else {
-    var xml = '<xml><block type="factory_base" deletable="false" movable="false"></block></xml>';
+    var xml = '<xml xmlns="https://developers.google.com/blockly/xml"><block type="factory_base" deletable="false" movable="false"></block></xml>';
     Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(xml), mainWorkspace);
   }
   mainWorkspace.clearUndo();
